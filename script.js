@@ -1,38 +1,37 @@
-document.addEventListener("DOMContentLoaded", function () {
-    let images = document.querySelectorAll(".carousel-container img");
-    let currentIndex = 0;
-    let totalImages = images.length;
+document.getElementById("reservaForm").addEventListener("submit", function(event) {
+    event.preventDefault();
 
-    // Criar o contador
-    let counter = document.createElement("div");
-    counter.id = "counter";
-    counter.style.position = "absolute";
-    counter.style.bottom = "10px";
-    counter.style.left = "50%";
-    counter.style.transform = "translateX(-50%)";
-    counter.style.background = "rgba(0, 0, 0, 0.5)";
-    counter.style.color = "white";
-    counter.style.padding = "5px 10px";
-    counter.style.borderRadius = "5px";
-    counter.style.fontSize = "16px";
-    counter.innerText = `${currentIndex + 1} / ${totalImages}`;
-    document.querySelector(".carousel").appendChild(counter);
+    let formData = new FormData(this);
+    let scriptURL = "https://script.google.com/macros/s/AKfycbzGJFxjWU4mIwprWXpgEBL6lTTJR7BE-lSHzCIBx0LW6kLeEuonr9dY8D-nWdyeVHDQ/exec";
 
-    function showImage(index) {
-        images.forEach(img => img.classList.remove("active"));
-        images[index].classList.add("active");
-        counter.innerText = `${index + 1} / ${totalImages}`;
-    }
-
-    document.getElementById("prev").addEventListener("click", function () {
-        currentIndex = (currentIndex === 0) ? images.length - 1 : currentIndex - 1;
-        showImage(currentIndex);
-    });
-
-    document.getElementById("next").addEventListener("click", function () {
-        currentIndex = (currentIndex === images.length - 1) ? 0 : currentIndex + 1;
-        showImage(currentIndex);
-    });
-
-    showImage(currentIndex);
+    fetch(scriptURL, { method: "POST", body: formData })
+        .then(response => {
+            document.getElementById("mensagem").style.display = "block";
+            enviarEmail(formData);
+        })
+        .catch(error => console.error("Erro ao enviar reserva:", error));
 });
+
+function enviarEmail(formData) {
+    let emailURL = "https://api.emailjs.com/api/v1.0/email/send";
+
+    let data = {
+        service_id: "service_tyd0d9s", // Seu Service ID
+        template_id: "template_7603c6a", // Seu Template ID
+        user_id: "eubFM0q1g0av6vyCW", // Sua Public Key
+        template_params: {
+            nome: formData.get("nome"),
+            email: formData.get("email"),
+            data: formData.get("data"),
+            hospedes: formData.get("hospedes"),
+        }
+    };
+
+    fetch(emailURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    .then(response => console.log("E-mail enviado!"))
+    .catch(error => console.error("Erro ao enviar e-mail:", error));
+}
